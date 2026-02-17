@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Kaptan Panel</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(120deg,#0f2027,#203a43,#2c5364);
+  color:white;
+}
+
+.container{
+  max-width:600px;
+  margin:auto;
+  padding:40px;
+}
+
+.card{
+  background:rgba(255,255,255,0.1);
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:20px;
+}
+
+input,button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:6px;
+}
+
+button{
+  background:#00c6ff;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+<h2>Admin Giriş</h2>
+
+<input id="user" placeholder="Kullanıcı adı">
+<input id="pass" type="password" placeholder="Şifre">
+
+<button onclick="login()">Giriş Yap</button>
+
+<p id="sonuc"></p>
+</div>
+
+<div class="card">
+<h2>Admin Panel</h2>
+<button onclick="panel()">Panele Tıkla</button>
+<p id="panelSonuc"></p>
+</div>
+
+</div>
+
+<script>
+
+let girisYapildi = false;
+
+async function login(){
+  const res = await fetch("/login",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json"},
+    body:JSON.stringify({
+      username:document.getElementById("user").value,
+      password:document.getElementById("pass").value
+    })
+  });
+
+  const data = await res.json();
+
+  if(data.success){
+    girisYapildi = true;
+    document.getElementById("sonuc").innerText="Giriş başarılı";
+  }else{
+    document.getElementById("sonuc").innerText="Hatalı giriş";
+  }
+}
+
+async function panel(){
+
+  if(!girisYapildi){
+    alert("Önce giriş yap");
+    return;
+  }
+
+  const res = await fetch("/panel");
+  const data = await res.json();
+
+  document.getElementById("panelSonuc").innerText=data.mesaj;
+}
+
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+
+<style>
+
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f2027;
+  color:white;
+}
+
+/* LOGIN */
+#loginBox{
+  max-width:300px;
+  margin:100px auto;
+  background:#203a43;
+  padding:20px;
+  border-radius:10px;
+}
+
+input,button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:6px;
+}
+
+button{
+  background:#00c6ff;
+  cursor:pointer;
+}
+
+/* PANEL */
+#panel{
+  display:none;
+}
+
+.sidebar{
+  position:fixed;
+  width:200px;
+  height:100%;
+  background:#203a43;
+  padding:20px;
+}
+
+.sidebar button{
+  width:100%;
+  margin-bottom:10px;
+}
+
+.content{
+  margin-left:220px;
+  padding:30px;
+}
+
+.card{
+  background:#2c5364;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginBox">
+<h2>Admin Giriş</h2>
+<input id="user" placeholder="Kullanıcı">
+<input id="pass" type="password" placeholder="Şifre">
+<button onclick="login()">Giriş Yap</button>
+<p id="loginMsg"></p>
+</div>
+
+<!-- PANEL -->
+<div id="panel">
+
+<div class="sidebar">
+<h3>Menü</h3>
+<button onclick="loadDashboard()">Dashboard</button>
+<button onclick="showText('Ayarlar bölümü')">Ayarlar</button>
+<button onclick="showText('Mesajlar bölümü')">Mesajlar</button>
+</div>
+
+<div class="content">
+<div id="icerik"></div>
+</div>
+
+</div>
+
+<script>
+
+async function login(){
+
+  const res = await fetch("/login",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json"},
+    body:JSON.stringify({
+      username:document.getElementById("user").value,
+      password:document.getElementById("pass").value
+    })
+  });
+
+  const data = await res.json();
+
+  if(data.success){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("panel").style.display="block";
+    loadDashboard();
+  }else{
+    document.getElementById("loginMsg").innerText="Hatalı giriş";
+  }
+}
+
+async function loadDashboard(){
+
+  const res = await fetch("/stats");
+  const data = await res.json();
+
+  document.getElementById("icerik").innerHTML = `
+    <div class="card">Toplam Kullanıcı: ${data.users}</div>
+    <div class="card">Ziyaret: ${data.visits}</div>
+    <div class="card">Mesajlar: ${data.messages}</div>
+  `;
+}
+
+function showText(text){
+  document.getElementById("icerik").innerHTML =
+    `<div class="card">${text}</div>`;
+}
+
+</script>
+
+</body>
+</html>
